@@ -1,0 +1,32 @@
+/* =========================================
+  	Scroll bar styles for jQuery Scroll Path
+  	      (http://joelb.me/scrollpath)
+   ========================================= */
+
+.sp-scroll-bar {
+	position: fixed;
+	z-index: 9999;
+	right: 0;
+	top: 5%;
+	width: 10px;
+	height: 90%;
+	border-radius: 5px;
+}
+
+.sp-scroll-bar:hover {
+	background: white;
+	background: rgba(255,255,255, 0.1);
+}
+
+.sp-scroll-bar .sp-scroll-handle {
+	position: absolute;
+	width: 100%;
+	height: 50px;
+	border-radius: inherit;
+	background: gray;
+	background: rgba(0,0,0,0.7);
+}
+
+.sp-scroll-bar .sp-scroll-handle:hover {
+	background: black;
+}

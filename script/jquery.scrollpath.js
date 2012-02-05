@@ -77,7 +77,7 @@
 				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed ));
 			},
 
-			scrollTo: function( name, duration, easing ) {
+			scrollTo: function( name, duration, easing, callback ) {
 				var destination = findStep(name);
 				if ( destination === null ) $.error("jQuery.scrollPath could not find scroll target with name '" + name + "'");
 
@@ -90,7 +90,7 @@
 						distance = pathList.length - step + destination;
 					}
 				}
-				animateSteps( distance, duration, easing );
+				animateSteps( distance, duration, easing, callback );
 			}
 		};
 	
@@ -424,9 +424,12 @@
 	}
 
 	/* Animates forward the given amount of steps over the set duration. Negative values scroll backward */
-	function animateSteps ( steps, duration, easing ) {
+	function animateSteps ( steps, duration, easing, callback ) {
 		if( steps === 0 || isAnimating ) return;
-		if( !duration ) return scrollSteps( steps );
+		if( !duration || typeof duration !== "number" ) {
+			if ( typeof duration === "function" ) duration();
+			return scrollSteps( steps );
+		}
 		isAnimating = true;
 
 		var frames = ( duration / 1000 ) * FPS,
@@ -438,6 +441,11 @@
 				scrollToStep( wrapStep( startStep + easedSteps ), true );
 				if (currentFrame === frames) {
 					clearInterval( interval );
+					if ( typeof easing === "function" ) {
+						easing();
+					} else if ( callback ) {
+						callback();
+					}
 					isAnimating = false;
 				}
 			}, duration / frames);

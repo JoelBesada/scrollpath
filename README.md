@@ -100,7 +100,7 @@ __You should now have everything set up and ready to go!__
 	
 Once the plugin has been initalized, you can use the `scrollTo` method above to animate or jump (with `duration` set to 0) to given points in the path. These points are specified with the name parameter, which you can set on the different path end-points while creating the path. 
 
-The last three parameters `duration, easing, complete` work the same way as the [jQuery .animate() method](http://api.jquery.com/animate/). You can use custom easing functions by for example including the popular [jQuery Easing Plugin](http://gsgd.co.uk/sandbox/jquery/easing/) in your project. Here's an example using a easing method from the easing plugin:
+The last three parameters `duration, easing, complete` work the same way as the [jQuery .animate() method](http://api.jquery.com/animate/). You can use custom easing functions by for example including the popular [jQuery Easing Plugin](http://gsgd.co.uk/sandbox/jquery/easing/) in your project. Here's an example using an easing function from the plugin:
 
 	$.fn.scrollPath("scrollTo", myPath, 1000, "easeInOutSine", function() {
 		alert("Animation complete!")

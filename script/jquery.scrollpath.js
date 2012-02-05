@@ -1,7 +1,7 @@
 /*
                 =============================
                   jQuery Scroll Path Plugin
-                            v1.0
+                            v1.1
 
                    Demo and Documentation:
                   http://joelb.me/scrollpath
@@ -22,9 +22,13 @@
 	var	PREFIX =  "-" + getVendorPrefix().toLowerCase() + "-",
 		HAS_TRANSFORM_SUPPORT = supportsTransforms(),
 		HAS_CANVAS_SUPPORT = supportsCanvas(),
+		FPS = 30,
+		STEP_SIZE = 10,	// Number of actual path steps per scroll steps.
+						// The extra steps are needed to make animations look smooth.
 		isInitiated = false,
 		isDragging = false,
-		step = 0,
+		isAnimating = false,
+		step,
 		pathObject,
 		pathList,
 		element,
@@ -71,6 +75,22 @@
 			getPath: function( options ) {
 				$.extend( speeds, options );
 				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed ));
+			},
+
+			scrollTo: function( name, duration, easing ) {
+				var destination = findStep(name);
+				if ( destination === null ) $.error("jQuery.scrollPath could not find scroll target with name '" + name + "'");
+
+				var distance = destination - step;
+
+				if ( settings.wrapAround && Math.abs(distance) > pathList.length / 2) {
+					if ( destination > step) {
+						distance = -step - pathList.length + destination;
+					} else {
+						distance = pathList.length - step + destination;
+					}
+				}
+				animateSteps( distance, duration, easing );
 			}
 		};
 	
@@ -92,25 +112,36 @@
 
 			defaults = {
 				rotate: null,
-				callback: null
+				callback: null,
+				name: null
 			};
 
 		/* Rotates the screen while staying in place */
 		this.rotate = function( radians, options ) {
-			if ( !HAS_TRANSFORM_SUPPORT ) return;
-
 			var settings = $.extend( {}, defaults, options ),
 				rotDistance = Math.abs( radians - rotation ),
-				steps = Math.round( rotDistance / rotationSpeed ),
+				steps = Math.round( rotDistance / rotationSpeed ) * STEP_SIZE,
 				rotStep = ( radians - rotation ) / steps,
 				i = 1;
 			
+			if ( !HAS_TRANSFORM_SUPPORT ) {
+				if ( settings.name || settings.callback ) {
+					// In case there was a name or callback set to this path, we add an extra step with those
+					// so they don't get lost in browsers without rotation support
+					this.moveTo(xPos, yPos, {
+						callback: settings.callback,
+						name: settings.name
+					});
+				}
+				return;
+			}
 			
 			for( ; i <= steps; i++ ) {
 				path.push({ x: xPos,
 							y: yPos,
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null
+							callback: i === steps ? settings.callback : null,
+							name: i === steps ? settings.name : null
 						});
 			}
 			
@@ -119,13 +150,18 @@
 
 		/* Moves (jumps) directly to the given point */
 		this.moveTo = function( x, y, options ) {
-			var settings = $.extend( {}, defaults, options );
+			var settings = $.extend( {}, defaults, options ),
+				steps = path.length ? STEP_SIZE : 1;
+				i = 0;
 
-			path.push({ x: x,
-						y: y,
-						rotate: settings.rotate !== null ? settings.rotate : rotation,
-						callback: settings.callback
+			for(; i < steps; i++) {
+				path.push({ x: x,
+							y: y,
+							rotate: settings.rotate !== null ? settings.rotate : rotation,
+							callback: i === steps - 1 ? settings.callback : null,
+							name: i === steps - 1 ? settings.name : null
 					});
+			}
 
 			setPos( x, y );
 
@@ -139,7 +175,7 @@
 				relX = x - xPos,
 				relY = y - yPos,
 				distance = hypotenuse( relX, relY ),
-				steps = Math.round( distance/scrollSpeed ),
+				steps = Math.round( distance/scrollSpeed ) * STEP_SIZE,
 				xStep = relX / steps,
 				yStep =  relY / steps,
 				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
@@ -150,7 +186,8 @@
 				path.push({ x: xPos + xStep * i,
 							y: yPos + yStep * i,
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null
+							callback: i === steps ? settings.callback : null,
+							name: i === steps ? settings.name : null
 						});
 			}
 
@@ -170,7 +207,7 @@
 				endY = centerY + Math.sin( endAngle ) * radius,
 				angleDistance = sectorAngle( startAngle, endAngle, counterclockwise ),
 				distance = radius * angleDistance,
-				steps = Math.round( distance/scrollSpeed ),
+				steps = Math.round( distance/scrollSpeed ) * STEP_SIZE,
 				radStep = angleDistance / steps * ( counterclockwise ? -1 : 1 ),
 				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
 				rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 ),
@@ -187,7 +224,8 @@
 				path.push({ x: centerX + radius * Math.cos( startAngle + radStep*i ),
 							y: centerY + radius * Math.sin( startAngle + radStep*i ),
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null
+							callback: i === steps ? settings.callback : null,
+							name: i === steps ? settings.name : null
 						});
 			}
 
@@ -268,7 +306,7 @@
 							// Close in on the clicked part instead of jumping directly to it.
 							// This mimics the default browser scroll bar behavior.
 							if ( Math.abs(clickStep - step) > 5 ) {
-								clickStep = step + ( 5 * ( clickStep > step ? 1 : -1 ) );
+								clickStep = step + ( 5 * STEP_SIZE * ( clickStep > step ? 1 : -1 ) );
 							}
 							scrollToStep(clickStep);
 
@@ -350,7 +388,7 @@
 
 		e.preventDefault();
 		$( window ).scrollTop( 0 ).scrollLeft( 0 );
-		scrollSteps( -dir );
+		scrollSteps( -dir * STEP_SIZE );
 	}
 
 	/* Handles key scrolling (arrows and space) */
@@ -359,13 +397,13 @@
 		if ( /^text/.test( e.target.type ) ) return;
 		switch ( e.keyCode ) {
 			case 40: // Down Arrow
-				scrollSteps( 1 );
+				scrollSteps( STEP_SIZE );
 				break;
 			case 38: // Up Arrow
-				scrollSteps( -1 );
+				scrollSteps( -STEP_SIZE );
 				break;
 			case 32: // Spacebar
-				scrollSteps( 5 * ( e.shiftKey ? -1 : 1 ) );
+				scrollSteps( 5 * STEP_SIZE * ( e.shiftKey ? -1 : 1 ) );
 				break;
 		}
 	}
@@ -377,31 +415,68 @@
 
 		dragStep = limitWithin( Math.round( y / scrollBar.height() * ( pathList.length - 1 ) ), 0, pathList.length - 1 );
 
-		scrollToStep( dragStep );
+		scrollToStep( snap(dragStep, STEP_SIZE) );
 	}
 
 	/* Scrolls forward the given amount of steps. Negative values scroll backward. */
 	function scrollSteps( steps ) {
-		var nextStep = step + steps;
+		scrollToStep( wrapStep( step + steps ) );
+	}
 
-		if ( settings.wrapAround ) {
-			while ( nextStep < 0 ) nextStep += pathList.length;
-			while ( nextStep >= pathList.length ) nextStep -= pathList.length;
-		} else {
-			nextStep = limitWithin( nextStep, 0, pathList.length - 1 );
-		}
+	/* Animates forward the given amount of steps over the set duration. Negative values scroll backward */
+	function animateSteps ( steps, duration, easing ) {
+		if( steps === 0 || isAnimating ) return;
+		if( !duration ) return scrollSteps( steps );
+		isAnimating = true;
 
-		scrollToStep( nextStep );
+		var frames = ( duration / 1000 ) * FPS,
+			startStep = step,
+			currentFrame = 0,
+			easedSteps,
+			interval = setInterval(function() {
+				easedSteps = Math.round( ($.easing[easing] || $.easing.swing)( ++currentFrame / frames, duration / frames * currentFrame, 0, steps, duration) );
+				scrollToStep( wrapStep( startStep + easedSteps ), true );
+				if (currentFrame === frames) {
+					clearInterval( interval );
+					isAnimating = false;
+				}
+			}, duration / frames);
 	}
 
 	/* Scrolls to a specified step */
-	function scrollToStep( stepParam ) {
+	function scrollToStep( stepParam, fromAnimation ) {
+		if ( isAnimating && !fromAnimation ) return;
 		var cb = pathList[ stepParam ].callback;
 
 		element.css( makeCSS( pathList[ stepParam ] ) );
 		if( scrollHandle ) scrollHandle.css( "top", stepParam / (pathList.length - 1 ) * ( scrollBar.height() - scrollHandle.height() ) + "px" );
 		if ( cb && stepParam !== step ) cb();
 		step = stepParam;
+	}
+
+	/* Finds the step number of a given name */
+	function findStep( name ) {
+		var i = 0;
+		for ( ; i < pathList.length; i++ ) {
+			if ( pathList[ i ].name === name ) return i;
+		}
+		return null;
+	}
+
+	/* Wraps a step around the path, or limits it, depending on the wrapAround setting */
+	function wrapStep( wStep ) {
+		if ( settings.wrapAround ) {
+			if( isAnimating ) {
+				while ( wStep < 0 ) wStep += pathList.length;
+				while ( wStep >= pathList.length ) wStep -= pathList.length;
+			} else {
+				if ( wStep < 0 ) wStep = pathList.length - 1;
+				if ( wStep >= pathList.length ) wStep = 0;
+			}
+		} else {
+			wStep = limitWithin( wStep, 0, pathList.length - 1 );
+		}
+		return wStep;
 	}
 
 	/* Translates a given node in the path to CSS styles */
@@ -449,16 +524,6 @@
 		style[ PREFIX + prop ] = style[ prop ] = value;
 	}
 
-	/* Limits a given value between a lower and upper limit */
-	function limitWithin( value, lowerLimit, upperLimit ) {
-		if ( value > upperLimit ) {
-			return upperLimit;
-		} else if ( value < lowerLimit ) {
-			return lowerLimit;
-		}
-		return value;
-	}
-
 	/* Checks for CSS transform support */
 	function supportsTransforms() {
 		var	testStyle =  document.createElement( "dummy" ).style,
@@ -502,6 +567,23 @@
 		// To allow full circles, we set this special case.
 
 		return diff;
+	}
+
+	/* Limits a given value between a lower and upper limit */
+	function limitWithin( value, lowerLimit, upperLimit ) {
+		if ( value > upperLimit ) {
+			return upperLimit;
+		} else if ( value < lowerLimit ) {
+			return lowerLimit;
+		}
+		return value;
+	}
+
+	/* 'Snaps' a value to be a multiple of a given snap value */
+	function snap( value, snapValue ) {
+		var mod = value % snapValue;
+		if( mod > snapValue / 2) return value + snapValue - mod;
+		return value - mod;
 	}
 	
 	/* Normalizes a given angle (sets it between 0 and 2 * Math.PI) */

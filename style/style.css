@@ -57,7 +57,7 @@ a, a:visited {
 }
 
 a:hover {
-	color: #DDD;
+	color: #AAA;
 }
 
 a:active {
@@ -79,21 +79,51 @@ a:active {
 	position: absolute;
 }
 
-.settings {
+.settings, .navigation {
 	position: fixed;
 	z-index: 9999999;
 	bottom: 0;
-	right: 0;
 	background: rgba(10,10,10, 0.5);
 	font-family: Helvetica, Arial, sans-serif;
 	font-weight: normal;
 	font-size: 20px;
-	padding: 10px 20px;	
+}
+
+.settings {
+	right: 0;
+	padding: 10px 20px;
 	border-radius: 10px 0 0 0;
 }
 
 .settings a {
 	border: none;
+}
+
+.navigation {
+	left: 0;
+	border-radius: 0 10px 0 0;
+}
+
+.navigation li {
+	float: left;
+}
+
+.navigation a {
+	display: block;
+	width: 40px;
+	height: 40px;
+	line-height: 40px;
+	border: none;
+	text-align: center;
+	transition: 0.25s;
+}
+
+.navigation li:last-child a {
+	border-radius: 0 10px 0 0;
+}
+
+.navigation a:hover {
+	background: rgba(15,15,15, 0.5);
 }
 
 .sp-canvas {

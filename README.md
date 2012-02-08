@@ -102,7 +102,7 @@ Once the plugin has been initalized, you can use the `scrollTo` method above to 
 
 The last three parameters `duration, easing, complete` work the same way as the [jQuery .animate() method](http://api.jquery.com/animate/). You can use custom easing functions by for example including the popular [jQuery Easing Plugin](http://gsgd.co.uk/sandbox/jquery/easing/) in your project. Here's an example using an easing function from the plugin:
 
-	$.fn.scrollPath("scrollTo", myPath, 1000, "easeInOutSine", function() {
+	$.fn.scrollPath("scrollTo", "myPath", 1000, "easeInOutSine", function() {
 		alert("Animation complete!")
 	});
 

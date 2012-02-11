@@ -17,7 +17,6 @@
     Copyright 2012, Joel Besada
     MIT Licensed (http://www.opensource.org/licenses/mit-license.php)
 */
-
 ( function ( $, window, document, undefined ) {
 	var	PREFIX =  "-" + getVendorPrefix().toLowerCase() + "-",
 		HAS_TRANSFORM_SUPPORT = supportsTransforms(),
@@ -65,7 +64,13 @@
 				$( document ).on({
 					"mousewheel": scrollHandler,
 					"DOMMouseScroll": scrollHandler, // Firefox
-					"keydown": keyHandler
+					"keydown": keyHandler,
+					"mousedown": function( e ) {
+						if( e.button === 1 ) {
+							e.preventDefault();
+							return false;
+						}
+					}
 				});
 
 				$( window ).on( "resize", function() { scrollToStep( step ); } ); // Re-centers the screen
@@ -322,6 +327,7 @@
 									return false;
 								},
 								mousedown: function( e ) {
+									if ( e.button !== 0 ) return;
 									isDragging = true;
 									e.preventDefault();
 									return false;

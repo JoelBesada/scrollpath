@@ -1,7 +1,7 @@
 /*
                 =============================
                   jQuery Scroll Path Plugin
-                            v1.1
+                            v1.1.1
 
                    Demo and Documentation:
                   http://joelb.me/scrollpath

@@ -83,12 +83,12 @@
 			},
 
 			scrollTo: function( name, duration, easing, callback ) {
-				var destination = findStep(name);
-				if ( destination === null ) $.error("jQuery.scrollPath could not find scroll target with name '" + name + "'");
+				var destination = findStep( name );
+				if ( destination === undefined ) $.error( "jQuery.scrollPath could not find scroll target with name '" + name + "'" );
 
 				var distance = destination - step;
 
-				if ( settings.wrapAround && Math.abs(distance) > pathList.length / 2) {
+				if ( settings.wrapAround && Math.abs( distance ) > pathList.length / 2) {
 					if ( destination > step) {
 						distance = -step - pathList.length + destination;
 					} else {
@@ -114,6 +114,7 @@
 			offsetY = 0,
 			canvasPath = [{ method: "moveTo", args: [ 0, 0 ] }], // Needed if first path operation isn't a moveTo
 			path = [],
+			nameMap = {},
 
 			defaults = {
 				rotate: null,
@@ -145,11 +146,11 @@
 				path.push({ x: xPos,
 							y: yPos,
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null,
-							name: i === steps ? settings.name : null
+							callback: i === steps ? settings.callback : null
 						});
 			}
-			
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
+
 			rotation = radians % ( Math.PI*2 );
 		};
 
@@ -159,14 +160,14 @@
 				steps = path.length ? STEP_SIZE : 1;
 				i = 0;
 
-			for(; i < steps; i++) {
+			for( ; i < steps; i++ ) {
 				path.push({ x: x,
 							y: y,
 							rotate: settings.rotate !== null ? settings.rotate : rotation,
-							callback: i === steps - 1 ? settings.callback : null,
-							name: i === steps - 1 ? settings.name : null
+							callback: i === steps - 1 ? settings.callback : null
 					});
 			}
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
 
 			setPos( x, y );
 
@@ -191,10 +192,10 @@
 				path.push({ x: xPos + xStep * i,
 							y: yPos + yStep * i,
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null,
-							name: i === steps ? settings.name : null
+							callback: i === steps ? settings.callback : null
 						});
 			}
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
 
 			rotation = ( canRotate ? settings.rotate : rotation );
 			setPos( x, y );
@@ -229,10 +230,10 @@
 				path.push({ x: centerX + radius * Math.cos( startAngle + radStep*i ),
 							y: centerY + radius * Math.sin( startAngle + radStep*i ),
 							rotate: rotation + rotStep * i,
-							callback: i === steps ? settings.callback : null,
-							name: i === steps ? settings.name : null
+							callback: i === steps ? settings.callback : null
 						});
 			}
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
 
 			rotation = ( canRotate ? settings.rotate : rotation );
 			setPos( endX, endY );
@@ -244,6 +245,10 @@
 
 		this.getPath = function() {
 			return path;
+		};
+
+		this.getNameMap = function() {
+			return nameMap;
 		};
 
 		/* Appends offsets to all x and y coordinates before returning the canvas path */
@@ -470,11 +475,7 @@
 
 	/* Finds the step number of a given name */
 	function findStep( name ) {
-		var i = 0;
-		for ( ; i < pathList.length; i++ ) {
-			if ( pathList[ i ].name === name ) return i;
-		}
-		return null;
+		return pathObject.getNameMap()[ name ];
 	}
 
 	/* Wraps a step around the path, or limits it, depending on the wrapAround setting */

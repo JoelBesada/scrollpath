@@ -140,7 +140,7 @@
 						name: settings.name
 					});
 				}
-				return;
+				return this;
 			}
 			
 			for( ; i <= steps; i++ ) {
@@ -456,9 +456,10 @@
 			startStep = step,
 			currentFrame = 0,
 			easedSteps,
+			nextStep,
 			interval = setInterval(function() {
 				easedSteps = Math.round( ($.easing[easing] || $.easing.swing)( ++currentFrame / frames, duration / frames * currentFrame, 0, steps, duration) );
-				scrollToStep( wrapStep( startStep + easedSteps ), true );
+				nextStep = wrapStep( startStep + easedSteps);
 				if (currentFrame === frames) {
 					clearInterval( interval );
 					if ( typeof easing === "function" ) {
@@ -468,6 +469,7 @@
 					}
 					isAnimating = false;
 				}
+				scrollToStep( nextStep, true );
 			}, duration / frames);
 	}
 
@@ -478,7 +480,7 @@
 
 		element.css( makeCSS( pathList[ stepParam ] ) );
 		if( scrollHandle ) scrollHandle.css( "top", stepParam / (pathList.length - 1 ) * ( scrollBar.height() - scrollHandle.height() ) + "px" );
-		if ( cb && stepParam !== step ) cb();
+		if ( cb && stepParam !== step && !isAnimating ) cb();
 		step = stepParam;
 	}
 

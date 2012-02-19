@@ -153,6 +153,8 @@
 			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
 
 			rotation = radians % ( Math.PI*2 );
+
+			return this;
 		};
 
 		/* Moves (jumps) directly to the given point */
@@ -174,6 +176,8 @@
 
 			updateCanvas( x, y );
 			canvasPath.push({ method: "moveTo", args: arguments });
+
+			return this;
 		};
 
 		/* Draws a straight path to the given point */
@@ -203,6 +207,8 @@
 
 			updateCanvas( x, y );
 			canvasPath.push({ method: "lineTo", args: arguments });
+
+			return this;
 		};
 
 		/* Draws an arced path with a given circle center, radius, start and end angle. */
@@ -242,6 +248,8 @@
 			updateCanvas( centerX + radius, centerY + radius );
 			updateCanvas( centerX - radius, centerY - radius );
 			canvasPath.push({ method: "arc", args: arguments });
+
+			return this;
 		};
 
 		this.getPath = function() {

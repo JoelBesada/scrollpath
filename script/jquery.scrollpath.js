@@ -96,6 +96,7 @@
 					}
 				}
 				animateSteps( distance, duration, easing, callback );
+				return this;
 			}
 		};
 	

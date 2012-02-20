@@ -6,7 +6,7 @@ follows when scrolling.
 Demo: http://joelb.me/scrollpath
 
 Author: Joel Besada (http://www.joelb.me)
-Version: 1.1 (2012-02-06)
+Version: 1.1.1 (2012-02-20)
 Copyright 2012, Joel Besada
 
 MIT Licensed (http://www.opensource.org/licenses/mit-license.php)
@@ -28,7 +28,7 @@ Using the Plugin
 ---------------
 This guide aims to help you with getting started using the plugin. In addition to reading this, it's recommended that you check out the marked section of the _script/demo.js_ file, for a usage example.
 ### The Files
-To include the plugin on your page, grab the _min.jquery.scrollpath.js_ or _jquery.scrollpath.js_ file from the _script/_ folder of this repo. If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ aswell. 
+To include the plugin on your page, grab the _jquery.scrollpath.min.js_ or _jquery.scrollpath.js_ file from the _script/_ folder of this repo. If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ aswell. 
 
 __Note: This plugin requires jQuery 1.7+__
 
@@ -108,5 +108,8 @@ The last three parameters `duration, easing, complete` work the same way as the 
 
 Changelog
 ---------
+__Version 1.1.1 (2012-02-20)__:
+Minor bug and performance fixes. Added support for path command chaining.
+
 __Version 1.1 (2012-02-06)__:
 Added support for programmatically scrolling/animating to specified points in the path.

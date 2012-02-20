@@ -5,9 +5,9 @@ follows when scrolling.
 
 Demo: http://joelb.me/scrollpath
 
-Author: Joel Besada (http://www.joelb.me)
-Version: 1.1.1 (2012-02-20)
-Copyright 2012, Joel Besada
+Author: Joel Besada (http://www.joelb.me)  
+Version: 1.1.1 (2012-02-20)   
+Copyright 2012, Joel Besada   
 
 MIT Licensed (http://www.opensource.org/licenses/mit-license.php)
 

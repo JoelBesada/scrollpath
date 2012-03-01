@@ -211,6 +211,64 @@
 			return this;
 		};
 
+		this.bezierCurveTo = function(x1,y1,x2,y2,x3,y3,options){
+			var settings = $.extend( {}, defaults, options ),
+				relX =  xPos ,
+				relY =  yPos,
+				distance = hypotenuse( relX, relY ),
+				steps = Math.round( distance/scrollSpeed ) * STEP_SIZE,
+				xStep = relX / steps,
+				yStep =  relY / steps,
+				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
+				rotStep = ( canRotate ? ( settings.rotate - rotation ) / steps : 0 ),
+				i = 1;
+
+			
+
+			coord = function (x,y) { if(!x) var x=0; if(!y) var y=0; return {x: x, y: y}; }
+	
+			B1 = function(t) { return (t*t*t); }
+			B2 = function(t) { return (3*t*t*(1-t)); } 
+			B3 = function(t) { return (3*t*(1-t)*(1-t)); }
+			B4 = function(t) { return ((1-t)*(1-t)*(1-t)); }
+
+			function getBezier(percent,C1,C2,C3,C4) {
+				var pos = new coord();
+				pos.x = C1.x * B1(percent) + C2.x * B2(percent) +C3.x * B3(percent) + C4.x * B4(percent);
+				pos.y = C1.y * B1(percent) + C2.y * B2(percent) + C3.y * B3(percent) + C4.y * B4(percent);
+				return pos; 
+			}
+
+			//Control Points
+			P1 = coord(relX, relY);
+			P2 = coord(x1, y1);
+			P3 = coord(x2, y2);
+			P4 = coord(x3, y3);
+
+			for ( ; i <= steps; i++ ) {
+				
+				var curpos = getBezier(i / steps ,P4,P3,P2,P1)
+				
+				path.push({ x: Math.round(curpos.x),
+							y: Math.round(curpos.y),
+							rotate: rotation + rotStep * i,
+							callback: i === steps ? settings.callback : null
+						});
+			}
+			if( settings.name ){
+				nameMap[ settings.name ] = path.length - 1;
+			} 
+
+			
+			rotation = ( canRotate ? settings.rotate : rotation );
+			setPos( x3, y3 );
+			updateCanvas( x3, y3 );
+
+			canvasPath.push({ method: "bezierCurveTo", args: arguments });
+
+			return this;
+		};
+
 		/* Draws an arced path with a given circle center, radius, start and end angle. */
 		this.arc = function( centerX, centerY, radius, startAngle, endAngle, counterclockwise, options ) {
 			var settings = $.extend( {}, defaults, options ),

@@ -21,8 +21,8 @@
 	var	PREFIX =  "-" + getVendorPrefix().toLowerCase() + "-",
 		HAS_TRANSFORM_SUPPORT = supportsTransforms(),
 		HAS_CANVAS_SUPPORT = supportsCanvas(),
-		FPS = 30,
-		STEP_SIZE = 10,	// Number of actual path steps per scroll steps.
+		FPS = 60,
+		STEP_SIZE = 50,	// Number of actual path steps per scroll steps.
 						// The extra steps are needed to make animations look smooth.
 		isInitiated = false,
 		isDragging = false,
@@ -320,8 +320,7 @@
 		scrollBar = $( "<div>" ).
 						addClass( "sp-scroll-bar" ).
 						on( "click", function( e ) {
-							var clickStep = Math.round( e.offsetY / scrollBar.height() * ( pathList.length - 1) );
-
+							var clickStep = Math.round( (e.offsetY || e.clientY) / scrollBar.height() * ( pathList.length - 1) );
 							// Close in on the clicked part instead of jumping directly to it.
 							// This mimics the default browser scroll bar behavior.
 							if ( Math.abs(clickStep - step) > 5 ) {
@@ -476,9 +475,11 @@
 	/* Scrolls to a specified step */
 	function scrollToStep( stepParam, fromAnimation ) {
 		if ( isAnimating && !fromAnimation ) return;
-		var cb = pathList[ stepParam ].callback;
-
-		element.css( makeCSS( pathList[ stepParam ] ) );
+		var cb;
+		if (pathList[ stepParam ] ){
+			cb = pathList[ stepParam ].callback;
+			element.css( makeCSS( pathList[ stepParam ] ) );
+		}
 		if( scrollHandle ) scrollHandle.css( "top", stepParam / (pathList.length - 1 ) * ( scrollBar.height() - scrollHandle.height() ) + "px" );
 		if ( cb && stepParam !== step && !isAnimating ) cb();
 		step = stepParam;

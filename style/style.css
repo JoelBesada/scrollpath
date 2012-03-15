@@ -197,7 +197,7 @@ a:active {
 }
 
 .highlight {
-	animation: highlight 1s alternate 2;
+	animation: highlight 0.2s alternate 6 ;
 }
 
 @keyframes point-down {

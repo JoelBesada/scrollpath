@@ -24,6 +24,7 @@
 		FPS = 60,
 		STEP_SIZE = 50,	// Number of actual path steps per scroll steps.
 						// The extra steps are needed to make animations look smooth.
+		BIG_STEP_SIZE = STEP_SIZE * 5, // Step size for space, page down/up
 		isInitiated = false,
 		isDragging = false,
 		isAnimating = false,
@@ -421,8 +422,20 @@
 			case 38: // Up Arrow
 				scrollSteps( -STEP_SIZE );
 				break;
+			case 34: //Page Down
+				scrollSteps( BIG_STEP_SIZE );
+				break;
+			case 33: //Page Up
+				scrollSteps( -BIG_STEP_SIZE );
+				break;
 			case 32: // Spacebar
-				scrollSteps( 5 * STEP_SIZE * ( e.shiftKey ? -1 : 1 ) );
+				scrollSteps( BIG_STEP_SIZE * ( e.shiftKey ? -1 : 1 ) );
+				break;
+			case 35: // End
+				scrollToStep( pathList.length - 1 );
+				break;
+			case 36: //Home
+				scrollToStep( 0 );
 				break;
 		}
 	}

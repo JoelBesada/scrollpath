@@ -79,7 +79,7 @@ a:active {
 	position: absolute;
 }
 
-.settings, .navigation {
+.settings, nav {
 	position: fixed;
 	z-index: 9999999;
 	bottom: 0;
@@ -99,16 +99,16 @@ a:active {
 	border: none;
 }
 
-.navigation {
+nav {
 	left: 0;
 	border-radius: 0 10px 0 0;
 }
 
-.navigation li {
+nav li {
 	float: left;
 }
 
-.navigation a {
+nav a {
 	display: block;
 	width: 40px;
 	height: 40px;
@@ -118,11 +118,11 @@ a:active {
 	transition: 0.25s;
 }
 
-.navigation li:last-child a {
+nav li:last-child a {
 	border-radius: 0 10px 0 0;
 }
 
-.navigation a:hover {
+nav a:hover {
 	background: rgba(15,15,15, 0.5);
 }
 

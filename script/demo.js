@@ -51,7 +51,7 @@ function init() {
 	$(".wrapper").scrollPath({drawPath: true, wrapAround: true});
 
 	// Add scrollTo on click on the navigation anchors
-	$(".navigation").find("a").each(function() {
+	$("nav").find("a").each(function() {
 		var target = this.getAttribute("href").replace("#", "");
 		$(this).click(function(e) {
 			e.preventDefault();

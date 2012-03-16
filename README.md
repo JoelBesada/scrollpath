@@ -28,7 +28,7 @@ Using the Plugin
 ---------------
 This guide aims to help you with getting started using the plugin. In addition to reading this, it's recommended that you check out the marked section of the _script/demo.js_ file, for a usage example.
 ### The Files
-To include the plugin on your page, grab the _jquery.scrollpath.min.js_ or _jquery.scrollpath.js_ file from the _script/_ folder of this repo. If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ aswell. 
+To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo, or the [minified version](http://joelb.me/scrollpath/jquery.scrollpath.min.js). If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ aswell. 
 
 __Note: This plugin requires jQuery 1.7+__
 

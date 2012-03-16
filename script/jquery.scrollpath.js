@@ -318,13 +318,14 @@
 	function initScrollBar() {
 		if ( !settings.scrollBar ) return;
 
+		// TODO: Holding down the mouse on the bar should "rapidfire", like holding down space
 		scrollBar = $( "<div>" ).
 						addClass( "sp-scroll-bar" ).
-						on( "click", function( e ) {
+						on( "mousedown", function( e ) {
 							var clickStep = Math.round( (e.offsetY || e.clientY) / scrollBar.height() * ( pathList.length - 1) );
 							// Close in on the clicked part instead of jumping directly to it.
 							// This mimics the default browser scroll bar behavior.
-							if ( Math.abs(clickStep - step) > 5 ) {
+							if ( Math.abs(clickStep - step) > BIG_STEP_SIZE) {
 								clickStep = step + ( 5 * STEP_SIZE * ( clickStep > step ? 1 : -1 ) );
 							}
 							scrollToStep(clickStep);

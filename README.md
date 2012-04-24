@@ -13,7 +13,7 @@ MIT Licensed (http://www.opensource.org/licenses/mit-license.php)
 
 Introduction
 ---------------
-jQuery Scroll Path is a plugin that lets you define your own custom scroll path. What this means exactly is best understood by [checking out the demo](http://joelb.me/scrollpath). The plugin uses canvas flavored syntax for drawing paths, using the methods moveTo, lineTo and arc. To help with getting the path right, a canvas overlay with the path can be enabled when initating the plugin.
+jQuery Scroll Path is a plugin that lets you define your own custom scroll path. What this means exactly is best understood by [checking out the demo](http://joelb.me/scrollpath). The plugin uses canvas flavored syntax for drawing paths, using the methods moveTo, lineTo and arc. To help with getting the path right, a canvas overlay with the path can be enabled when initializing the plugin.
 
 Scrolling can be done with the mousewheel, up/down arrow keys and spacebar. The spacebar scrolls faster than the arrow keys, and holding shift while pressing space will scroll backwards. A custom scrollbar is also included, which allows click and drag scrolling. The scrollbar is enabled by default.
 
@@ -28,7 +28,7 @@ Using the Plugin
 ---------------
 This guide aims to help you with getting started using the plugin. In addition to reading this, it's recommended that you check out the marked section of the _script/demo.js_ file, for a usage example.
 ### The Files
-To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo, or the [minified version](http://joelb.me/scrollpath/jquery.scrollpath.min.js). If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ aswell. 
+To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo, or the [minified version](http://joelb.me/scrollpath/jquery.scrollpath.min.js). If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ as well. 
 
 __Note: This plugin requires jQuery 1.7+__
 
@@ -45,7 +45,7 @@ You can also change the default scrolling speeds by adding an object as a parame
 
 Note that the rotation speed only applies when rotating around a set position.
 
-The `Path` object has a number of methods for drawing the path. The moveTo, lineTo and arc methods work exactly the same way as their canvas equivalents. If you are new to drawing paths on a canvas, check out the canvas [lines](http://www.html5canvastutorials.com/tutorials/html5-canvas-lines/) and [arcs](http://www.html5canvastutorials.com/tutorials/html5-canvas-arcs/) explanaitions. The options parameter is optional in all methods.
+The `Path` object has a number of methods for drawing the path. The moveTo, lineTo and arc methods work exactly the same way as their canvas equivalents. If you are new to drawing paths on a canvas, check out the canvas [lines](http://www.html5canvastutorials.com/tutorials/html5-canvas-lines/) and [arcs](http://www.html5canvastutorials.com/tutorials/html5-canvas-arcs/) explanations. The options parameter is optional in all methods.
 
 #### moveTo( x, y [,options] )
 Moves the center of the screen to a specified coordinate. This is done in a single step (i.e. the screen 'jumps' to the given point).
@@ -74,8 +74,8 @@ Here is an example of a named path, rotating a full rotation along a line and fi
 		name: "myPath"
 	});
 
-### Initating the Plugin
-Once you're done drawing your path on the `Path` object, all that's left to do is initating the plugin on a container element which contains all the elements you want to scroll around. When you're doing this, there's three more settings that can be changed: `drawPath`, `wrapAround` and `scrollBar`. 
+### Initializing the Plugin
+Once you're done drawing your path on the `Path` object, all that's left to do is to initialize the plugin on a container element which contains all the elements you want to scroll around. When you're doing this, there are three more settings that can be changed: `drawPath`, `wrapAround` and `scrollBar`. 
 
 The `drawPath` boolean decides whether a canvas overlay with the path should be drawn. This can be used to make it easier for you to see exactly how the path you've made looks, and should probably only be used for debugging purposes. This is set to `false` by default.
 
@@ -91,14 +91,14 @@ Here's an example:
 		scrollBar: false
 	});
 
-Once you initate the plugin, it will automatically center the screen to the first point in the path. While scrolling, the plugin will also always make sure that the center of the screen follows the path. Also, whenever the window is resized, the plugin makes sure it re-centers itself
+Once you initialize the plugin, it will automatically center the screen to the first point in the path. While scrolling, the plugin will also always make sure that the center of the screen follows the path. Also, whenever the window is resized, the plugin makes sure it re-centers itself.
 
 __You should now have everything set up and ready to go!__
 
 ### Scrolling Programmatically (Animations)
 	$.fn.scrollPath( "scrollTo", name [, duration, easing, complete] );
 	
-Once the plugin has been initalized, you can use the `scrollTo` method above to animate or jump (with `duration` set to 0) to given points in the path. These points are specified with the name parameter, which you can set on the different path end-points while creating the path. 
+Once the plugin has been initialized, you can use the `scrollTo` method above to animate or jump (with `duration` set to 0) to given points in the path. These points are specified with the name parameter, which you can set on the different path end-points while creating the path. 
 
 The last three parameters `duration, easing, complete` work the same way as the [jQuery .animate() method](http://api.jquery.com/animate/). You can use custom easing functions by for example including the popular [jQuery Easing Plugin](http://gsgd.co.uk/sandbox/jquery/easing/) in your project. Here's an example using an easing function from the plugin:
 

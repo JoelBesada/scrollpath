@@ -25,7 +25,7 @@
 		STEP_SIZE = 50,	// Number of actual path steps per scroll steps.
 						// The extra steps are needed to make animations look smooth.
 		BIG_STEP_SIZE = STEP_SIZE * 5, // Step size for space, page down/up
-		isInitiated = false,
+		isInitialized = false,
 		isDragging = false,
 		isAnimating = false,
 		step,
@@ -49,12 +49,12 @@
 		},
 
 		methods = {
-			/* Initates the plugin */
+			/* Initializes the plugin */
 			init: function( options ) {
-				if ( this.length > 1 || isInitiated ) $.error( "jQuery.scrollPath can only initialized on *one* element *once*" );
+				if ( this.length > 1 || isInitialized ) $.error( "jQuery.scrollPath can only be initialized on *one* element *once*" );
 				
 				$.extend( settings, options );
-				isInitiated = true;
+				isInitialized = true;
 				element = this;
 				pathList = pathObject.getPath();
 				initCanvas();
@@ -102,7 +102,7 @@
 		};
 	
 	/* The Path object serves as a context to "draw" the scroll path
-		on before initating the plugin */
+		on before initializing the plugin */
 	function Path( scrollS, rotateS ) {
 		var PADDING = 40,
 			scrollSpeed = scrollS,
@@ -314,7 +314,7 @@
 		}
 	};
 
-	/* Initalize the scroll bar */
+	/* Initialize the scroll bar */
 	function initScrollBar() {
 		if ( !settings.scrollBar ) return;
 

@@ -52,7 +52,7 @@ function init() {
 
 	// Add scrollTo on click on the navigation anchors
 	$("nav").find("a").each(function() {
-		var target = this.getAttribute("href").replace("#", "");
+		var target = $(this).attr("href").replace("#", "");
 		$(this).click(function(e) {
 			e.preventDefault();
 			

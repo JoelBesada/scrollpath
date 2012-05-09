@@ -64,7 +64,7 @@
 
 				$( document ).on({
 					"mousewheel": scrollHandler,
-					"DOMMouseScroll": scrollHandler, // Firefox
+					"DOMMouseScroll": ("onmousewheel" in document) ? null : scrollHandler, // Firefox
 					"keydown": keyHandler,
 					"mousedown": function( e ) {
 						if( e.button === 1 ) {

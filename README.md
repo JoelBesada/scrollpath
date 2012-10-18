@@ -83,12 +83,32 @@ Setting `wrapAround` to 'true' will make the path loop, which means that once yo
 
 The `scrollBar` setting enables or disables the scroll bar, which is enabled by default.
 
+The following properties are all related to drawing the path, and are only relevant if `drawPath` is set to true.
+
+The `shadowBlur` setting sets the blur of the path shadow, it is 15 by default.
+
+The `shadowColor` setting sets the color of the path shadow, it is black by default.
+
+The `strokeStyle` setting sets the color of the path, it is black by default. For more information about strokeStyle see [this tutorial about strokeStyle](http://www.w3schools.com/html5/canvas_strokestyle.asp).
+
+The `lineWidth` setting sets the thickness of the path, it is 10 by default.
+
+The `lineCap` setting sets the style of the path end points, it is round by default, other options are ['butt','round','square'].
+
+The `lineJoin` setting sets the style of the path corners, it is round by default, other options are ['miter','round','bevel'].
+
 Here's an example:
 
 	$(".your-container-element").scrollPath({
 		drawPath: true,
 		wrapAround: true,
-		scrollBar: false
+		scrollBar: false,
+    shadowBlur: 15,
+    shadowColor: "black",
+    strokeStyle: "white",
+    lineWidth: 10,
+    lineCap: "round",
+    lineJoin: "round"
 	});
 
 Once you initialize the plugin, it will automatically center the screen to the first point in the path. While scrolling, the plugin will also always make sure that the center of the screen follows the path. Also, whenever the window is resized, the plugin makes sure it re-centers itself.

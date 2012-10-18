@@ -103,12 +103,12 @@ Here's an example:
 		drawPath: true,
 		wrapAround: true,
 		scrollBar: false,
-    		shadowBlur: 15,
-	    	shadowColor: "black",
-	    	strokeStyle: "white",
-	    	lineWidth: 10,
-	    	lineCap: "round",
-	    	lineJoin: "round"
+    	shadowBlur: 15,
+    	shadowColor: "black",
+    	strokeStyle: "white",
+    	lineWidth: 10,
+    	lineCap: "round",
+    	lineJoin: "round"
 	});
 
 Once you initialize the plugin, it will automatically center the screen to the first point in the path. While scrolling, the plugin will also always make sure that the center of the screen follows the path. Also, whenever the window is resized, the plugin makes sure it re-centers itself.

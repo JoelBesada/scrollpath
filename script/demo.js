@@ -3,13 +3,23 @@ $(document).ready(init);
 function init() {
 	/* ========== DRAWING THE PATH AND INITIATING THE PLUGIN ============= */
 
-	$.fn.scrollPath("getPath")
+	var settings = {
+	    drawPath: true, 
+	    wrapAround: true, 
+	    logSvg:true, 
+	    autoJoinArcWithLineTo: false,
+        floorCoordinates:false         // turn off antialias on canvas, improve speed
+	};
+	
+	var path = $.fn.scrollPath("getPath");
+		
 		// Move to 'start' element
-		.moveTo(400, 50, {name: "start"})
+	path.moveTo(400, 50, {name: "start"})
 		// Line to 'description' element
-		.lineTo(400, 800, {name: "description"})
+		.lineTo(path.lineEndPointX, path.lineEndPointY+750, {name: "description"})
 		// Arc down and line to 'syntax'
 		.arc(200, 1200, 400, -Math.PI/2, Math.PI/2, true)
+		// NEW OPTION: .lineTo(path.arcEndPointX+100,path.arcEndPointY+100, ...)
 		.lineTo(600, 1600, {
 			callback: function() {
 				highlight($(".settings"));
@@ -25,6 +35,7 @@ function init() {
 		})
 		// Arc up while rotating
 		.arc(1800, 1000, 600, Math.PI/2, 0, true, {rotate: Math.PI/2 })
+		// NEW OPTION: .lineTo(path.arcEndPointX+100,path.arcEndPointY+100, ...)
 		// Line to 'rotations'
 		.lineTo(2400, 750, {
 			name: "rotations"
@@ -48,7 +59,7 @@ function init() {
 		.arc(1300, 50, 900, -Math.PI/2, -Math.PI, true, {rotate: Math.PI*2, name: "end"});
 
 	// We're done with the path, let's initate the plugin on our wrapper element
-	$(".wrapper").scrollPath({drawPath: true, wrapAround: true});
+	$(".wrapper").scrollPath(settings);
 
 	// Add scrollTo on click on the navigation anchors
 	$("nav").find("a").each(function() {

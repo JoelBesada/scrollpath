@@ -43,9 +43,12 @@
 
 		// Default plugin settings
 		settings = {
-			wrapAround: false,
+			wrapAround: false, // also SVG "Z" closepath
 			drawPath: false,
-			scrollBar: true
+			scrollBar: true,
+			logSvg: false,  // output SVG path to console to draw a PNG later (copy from console to *.svg file!) 
+			autoJoinArcWithLineTo: true, // fill gaps automatically with inserted lineTo
+			floorCoordinates:false         // turn off antialias on canvas
 		},
 
 		methods = {
@@ -164,6 +167,12 @@
 				steps = path.length ? STEP_SIZE : 1;
 				i = 0;
 
+			this.lineEndPointX = x;
+			this.lineEndPointY = y;
+			
+			if(settings.logSvg)
+			    console.log("lineEndPointX (moveto) = ",x,",",y);
+			
 			for( ; i < steps; i++ ) {
 				path.push({ x: x,
 							y: y,
@@ -194,6 +203,13 @@
 				rotStep = ( canRotate ? ( settings.rotate - rotation ) / steps : 0 ),
 				i = 1;
 
+			// save endpoints for easier relative calculation
+			this.lineEndPointX = x;
+			this.lineEndPointY = y;
+			
+			if(settings.logSvg)
+			    console.log("lineEndPointX = ",x,",",y);
+			
 			for ( ; i <= steps; i++ ) {
 				path.push({ x: xPos + xStep * i,
 							y: yPos + yStep * i,
@@ -212,6 +228,14 @@
 			return this;
 		};
 
+		/* Simplifies drawing an arc from a given start point, no need to calculate center first. */
+		this.arcFrom = function( startX, startY, radius, startAngle, endAngle, counterclockwise, options ) {
+		    var centerX = startX - Math.cos( startAngle ) * radius;
+		    var centerY = startY - Math.sin( startAngle ) * radius;
+		    this.arc(centerX, centerY, radius, startAngle, endAngle, counterclockwise, options);
+			return this;
+		};
+		
 		/* Draws an arced path with a given circle center, radius, start and end angle. */
 		this.arc = function( centerX, centerY, radius, startAngle, endAngle, counterclockwise, options ) {
 			var settings = $.extend( {}, defaults, options ),
@@ -227,11 +251,22 @@
 				rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 ),
 				i = 1;
 
+			// save endpoints for easier relative calculation
+			this.arcEndPointX = endX;
+			this.arcEndPointY = endY;
+
+			if(settings.logSvg)
+			    console.log("arcEndPoint = ",endX,",",endY);
+			
 			// If the arc starting point isn't the same as the end point of the preceding path,
 			// prepend a line to the starting point. This is the default behavior when drawing on
 			// a canvas.
-			if ( xPos !== startX || yPos !== startY ) {
-				this.lineTo( startX, startY );
+			if(settings.autoJoinArcWithLineTo)
+            {
+                if ( xPos !== startX || yPos !== startY )
+                {
+                    this.lineTo( startX, startY );
+                }
 			}
 			
 			for ( ; i <= steps; i++ ) {
@@ -248,7 +283,7 @@
 
 			updateCanvas( centerX + radius, centerY + radius );
 			updateCanvas( centerX - radius, centerY - radius );
-			canvasPath.push({ method: "arc", args: arguments });
+			canvasPath.push({ method: "arc", args: arguments, endX:endX, endY:endY });
 
 			return this;
 		};
@@ -267,6 +302,22 @@
 			for( ; i < canvasPath.length; i++ ) {
 				canvasPath[ i ].args[ 0 ] -= this.getPathOffsetX();
 				canvasPath[ i ].args[ 1 ] -= this.getPathOffsetY();
+				if(canvasPath[ i ].hasOwnProperty("endX"))
+				    {
+				        canvasPath[ i ].endX -= this.getPathOffsetX();
+				        canvasPath[ i ].endY -= this.getPathOffsetY();
+                       if(settings.floorCoordinates)
+                       {
+                            canvasPath[ i ].endX = Math.floor(canvasPath[ i ].endX);
+                            canvasPath[ i ].endY = Math.floor(canvasPath[ i ].endY);
+                       }
+				    }
+				    
+               if(settings.floorCoordinates)
+               {
+                    canvasPath[ i ].args[ 0 ] = Math.floor(canvasPath[ i ].args[ 0 ]);
+                    canvasPath[ i ].args[ 1 ] = Math.floor(canvasPath[ i ].args[ 1 ]);
+               }
 			}
 			return canvasPath;
 		};
@@ -387,7 +438,6 @@
 	/* Sets the canvas path styles and draws the path */
 	function drawCanvasPath( context, path ) {
 		var i = 0;
-
 		context.shadowBlur = 15;
 		context.shadowColor = "black";
 		context.strokeStyle = "white";
@@ -397,11 +447,51 @@
 
 		for( ; i < path.length; i++ ) {
 			context[ path[ i ].method ].apply( context, path[ i ].args );
+			logSvgPath(path[ i ]);
 		}
 
+		if(settings.logSvg)
+		{
+		    var z = settings.wrapAround ? "Z" : "";
+		        
+		    console.log(svgPrefix+svgpath+z+svgPostfix);
+		}
+		
 		context.stroke();
 	}
 
+	var svgpath = "";
+	
+	var svgPrefix = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+	svgPrefix += '<svg xmlns="http://www.w3.org/2000/svg" viewBox = "0 0 1100 6250" version = "1.1"><g stroke = "black" stroke-width = "3" fill = "none">';
+	svgPrefix += '<path d="';
+	
+	var svgPostfix = '" /></g></svg>';
+	
+	
+	function logSvgPath(path)
+	{
+	    switch(path.method)
+	    {
+	        case "moveTo": 
+	            svg = "M " + path.args[0] + "," + path.args[1] + " ";
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg;
+	            break;
+	            
+	        case "lineTo": 
+	            svg = "L " + path.args[0] + "," + path.args[1] + " ";
+	            if(settings.logSvg) console.log(svg);
+	            svgpath+=svg;
+	            break;
+	            
+	        case "arc": 
+	            svg = "A "+path.args[2]+","+path.args[2]+" 0 0,"+(!path.args[5]?"1":"0")+" "+path.endX+","+path.endY+" "; 
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg; break;
+	    }
+	}
+	
 	/* Handles mousewheel scrolling */
 	function scrollHandler( e ) {
 		var scrollDelta = e.originalEvent.wheelDelta || -e.originalEvent.detail,

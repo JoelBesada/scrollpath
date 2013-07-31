@@ -6,12 +6,15 @@ function init() {
 	var settings = {
 	    drawPath: true, 
 	    wrapAround: true, 
-	    logSvg:true, 
+	    logSvg:true,                  // output SVG path to console to draw a PNG later (copy from console to *.svg file!) process SVG in inkcape or such
 	    autoJoinArcWithLineTo: false,
+	    useDegrees: false,             // set to true to use start and end angle in degrees instead radians
         floorCoordinates:false         // turn off antialias on canvas, improve speed
 	};
 	
-	var path = $.fn.scrollPath("getPath");
+	// we must pass the plugin settings to the Path constructor AND the plugin
+	// to make useDegrees and logSvg work as Path is initialized before the plugin
+	var path = $.fn.scrollPath("getPath",{},settings);
 		
 		// Move to 'start' element
 	path.moveTo(400, 50, {name: "start"})

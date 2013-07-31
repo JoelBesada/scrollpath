@@ -46,8 +46,9 @@
 			wrapAround: false, // also SVG "Z" closepath
 			drawPath: false,
 			scrollBar: true,
-			logSvg: false,  // output SVG path to console to draw a PNG later (copy from console to *.svg file!) 
-			autoJoinArcWithLineTo: true, // fill gaps automatically with inserted lineTo
+			logSvg: false,                 // output SVG path to console to draw a PNG later (copy from console to *.svg file!) 
+			autoJoinArcWithLineTo: true,   // fill gaps automatically with inserted lineTo
+			useDegrees: false,             // arc uses angles in degrees
 			floorCoordinates:false         // turn off antialias on canvas
 		},
 
@@ -81,9 +82,13 @@
 				return this;
 			},
 
-			getPath: function( options ) {
+			getPath: function( options, pluginSettings ) {
 				$.extend( speeds, options );
-				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed ));
+				
+				if(pluginSettings === undefined)
+				    pluginSettings = settings;
+				
+				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed, pluginSettings ));
 			},
 
 			scrollTo: function( name, duration, easing, callback ) {
@@ -106,7 +111,7 @@
 	
 	/* The Path object serves as a context to "draw" the scroll path
 		on before initializing the plugin */
-	function Path( scrollS, rotateS ) {
+	function Path( scrollS, rotateS, pluginSettings ) {
 		var PADDING = 40,
 			scrollSpeed = scrollS,
 			rotationSpeed = rotateS,
@@ -126,6 +131,10 @@
 				callback: null,
 				name: null
 			};
+			
+	    this.pluginSettings = pluginSettings;
+			
+		this.deg2rad = function(d) { return 2*Math.PI*(d-90)/360; };
 
 		/* Rotates the screen while staying in place */
 		this.rotate = function( radians, options ) {
@@ -170,7 +179,7 @@
 			this.lineEndPointX = x;
 			this.lineEndPointY = y;
 			
-			if(settings.logSvg)
+			if(this.pluginSettings.logSvg)
 			    console.log("lineEndPointX (moveto) = ",x,",",y);
 			
 			for( ; i < steps; i++ ) {
@@ -207,7 +216,7 @@
 			this.lineEndPointX = x;
 			this.lineEndPointY = y;
 			
-			if(settings.logSvg)
+			if(this.pluginSettings.logSvg)
 			    console.log("lineEndPointX = ",x,",",y);
 			
 			for ( ; i <= steps; i++ ) {
@@ -238,8 +247,15 @@
 		
 		/* Draws an arced path with a given circle center, radius, start and end angle. */
 		this.arc = function( centerX, centerY, radius, startAngle, endAngle, counterclockwise, options ) {
-			var settings = $.extend( {}, defaults, options ),
-				startX = centerX + Math.cos( startAngle ) * radius,
+					    
+		    var settings = $.extend( {}, defaults, options );
+		    
+		    if(this.pluginSettings.useDegrees) {
+		        startAngle = this.deg2rad(startAngle);
+		        endAngle = this.deg2rad(endAngle);
+		    }
+		    
+			var startX = centerX + Math.cos( startAngle ) * radius,
 				startY = centerY + Math.sin( startAngle ) * radius,
 				endX = centerX + Math.cos( endAngle ) * radius,
 				endY = centerY + Math.sin( endAngle ) * radius,
@@ -255,13 +271,13 @@
 			this.arcEndPointX = endX;
 			this.arcEndPointY = endY;
 
-			if(settings.logSvg)
+			if(this.pluginSettings.logSvg)
 			    console.log("arcEndPoint = ",endX,",",endY);
 			
 			// If the arc starting point isn't the same as the end point of the preceding path,
 			// prepend a line to the starting point. This is the default behavior when drawing on
 			// a canvas.
-			if(settings.autoJoinArcWithLineTo)
+			if(this.pluginSettings.autoJoinArcWithLineTo)
             {
                 if ( xPos !== startX || yPos !== startY )
                 {

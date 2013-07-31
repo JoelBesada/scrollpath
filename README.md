@@ -27,6 +27,17 @@ __Are you using jQuery Scroll Path on any of your sites?__ I'd love to hear abou
 Using the Plugin
 ---------------
 This guide aims to help you with getting started using the plugin. In addition to reading this, it's recommended that you check out the marked section of the _script/demo.js_ file, for a usage example.
+
+### Plugin Settings
+    wrapAround: false, // also SVG "Z" closepath
+    drawPath: false,
+    scrollBar: true,
+    logSvg: false,
+        // output SVG path to console to draw a PNG later (copy from console to *.svg file!) 
+    autoJoinArcWithLineTo: true,   // fill gaps automatically with inserted lineTo
+    useDegrees: false,             // arc uses angles in degrees
+    floorCoordinates:false         // turn off antialias on canvas
+
 ### The Files
 To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo, or the [minified version](http://joelb.me/scrollpath/jquery.scrollpath.min.js). If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ as well. 
 
@@ -40,7 +51,7 @@ You can also change the default scrolling speeds by adding an object as a parame
 	var path = $.fn.scrollPath("getPath", {
 		scrollSpeed: 80, // Default is 50
 		rotationSpeed: Math.PI / 10 // Default is Math.PI / 15
-	});
+	}, pluginSettings);
 	// Use the various path drawing methods below on the path variable
 
 Note that the rotation speed only applies when rotating around a set position.
@@ -52,6 +63,9 @@ Moves the center of the screen to a specified coordinate. This is done in a sing
 
 #### lineTo( x, y [,options] )
 Draws a straight line from the current position to the given point. 
+
+#### arcFrom( x, y, radius, startAngle, endAngle, counterclockwise [,options] )
+Calulates parameters for arc() so that the arc starts at x,y
 
 #### arc( centerX, centerY, radius, startAngle, endAngle, counterclockwise [,options] )
 Draws an arc with its center at coordinate (centerX, centerY) with the given radius. The start and end angles are in radians, and the counterclockwise boolean decides which direction the path is drawn between the angles. If the starting point of the arc isn't the same as the end point of the preceding path, a straight line is automatically drawn between the points.
@@ -108,6 +122,9 @@ The last three parameters `duration, easing, complete` work the same way as the 
 
 Changelog
 ---------
+
+__Version 1.2 (2013-07-31)__: Added SVG path output via console log. Added arcFrom shortcut, added linking helpers and options, added degrees angle option.
+
 __Version 1.1.1 (2012-02-20)__:
 Minor bug and performance fixes. Added support for path command chaining.
 

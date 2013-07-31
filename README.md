@@ -39,7 +39,7 @@ This guide aims to help you with getting started using the plugin. In addition t
     floorCoordinates:false         // turn off antialias on canvas
 
 ### The Files
-To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo, or the [minified version](http://joelb.me/scrollpath/jquery.scrollpath.min.js). If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ as well. 
+To include the plugin on your page, grab the _jquery.scrollpath.js_ file from the _script/_ folder of this repo. If you want to include the scrollbar, make sure to include the _scrollpath.css_ stylesheet from _style/_ as well. 
 
 __Note: This plugin requires jQuery 1.7+__
 

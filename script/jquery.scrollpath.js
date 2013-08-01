@@ -254,6 +254,9 @@
 		    if(this.pluginSettings.useDegrees) {
 		        startAngle = this.deg2rad(startAngle);
 		        endAngle = this.deg2rad(endAngle);
+		        
+		        if(settings.rotate)
+		            settings.rotate = this.deg2rad(settings.rotate);
 		    }
 		    
 			var startX = centerX + Math.cos( startAngle ) * radius,

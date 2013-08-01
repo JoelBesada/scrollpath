@@ -331,7 +331,7 @@
 		    var relX = dx - ax,
 				relY = dy - ay,
 				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
-				distance = hypotenuse( relX, relY )*1.3; // bad approximation that underestimates @TODO fixit
+				distance = hypotenuse( relX, relY )*1.3; // bad approximation @TODO fixit, but how?
 
             var steps = Math.round( distance/scrollSpeed ) * STEP_SIZE;
             var rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 );
@@ -345,7 +345,9 @@
 			{
 			    var t = i/(steps-1);
 			    var p = this.bezier_(a, b, c, d, t);
-			    console.log(p);
+			    
+			    updateCanvas(p[0],p[1]); // increase canvas size to bounding box of bezier
+			    
 				path.push({ x: p[0],
 							y: p[1],
 							rotate: rotation + rotStep * i,
@@ -358,11 +360,6 @@
 			rotation = ( canRotate ? settings.rotate : rotation );
 			setPos( dx, dy );
 			
-            // increase canvas size; should be bounding box of bezier, but is not @TODO fixit
-            updateCanvas( ax, ay );
-            updateCanvas( bx, by );
-            updateCanvas( cx, cy );
-            updateCanvas( dx, cy );
             var a = [bx, by, cx, cy, dx, dy];
 			canvasPath.push({ method: "bezierCurveTo", args:a, isBezier:true }); // horrible!
 			

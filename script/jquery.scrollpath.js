@@ -239,8 +239,9 @@
 
 		/* Simplifies drawing an arc from a given start point, no need to calculate center first. */
 		this.arcFrom = function( startX, startY, radius, startAngle, endAngle, counterclockwise, options ) {
-		    var centerX = startX - Math.cos( startAngle ) * radius;
-		    var centerY = startY - Math.sin( startAngle ) * radius;
+		    var rad = this.pluginSettings.useDegrees ? this.deg2rad(startAngle) : startAngle;
+		    var centerX = startX - Math.cos( rad ) * radius;
+		    var centerY = startY - Math.sin( rad ) * radius;
 		    this.arc(centerX, centerY, radius, startAngle, endAngle, counterclockwise, options);
 			return this;
 		};

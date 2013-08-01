@@ -307,7 +307,68 @@
 
 			return this;
 		};
+		
+        this.linearInterpolation_ = function(a, b, t)
+        {
+            return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t];
+        };
 
+        // evaluate a point on a bezier-curve. t goes from 0 to 1.0
+        this.bezier_ = function(a, b, c, d, t)
+        {
+            var ab = this.linearInterpolation_(a,b,t);           // point between a and b (green)
+            var bc = this.linearInterpolation_(b,c,t);           // point between b and c (green)
+            var cd = this.linearInterpolation_(c,d,t);           // point between c and d (green)
+            var abbc = this.linearInterpolation_(ab,bc,t);       // point between ab and bc (blue)
+            var bccd = this.linearInterpolation_(bc,cd,t);       // point between bc and cd (blue)
+            return this.linearInterpolation_(abbc,bccd,t);   // point on the bezier-curve (black)
+        };
+        
+        this.bezierCurve = function(ax, ay, bx, by, cx, cy, dx, dy, options)
+        {
+		    var settings = $.extend( {}, defaults, options ); // overloads plugin's settings variable!
+		    
+		    var relX = dx - ax,
+				relY = dy - ay,
+				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
+				distance = hypotenuse( relX, relY )*1.3; // bad approximation that underestimates @TODO fixit
+
+            var steps = Math.round( distance/scrollSpeed ) * STEP_SIZE;
+            var rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 );
+            
+            var a = [ax, ay];
+            var b = [bx, by];
+            var c = [cx, cy];
+            var d = [dx, dy];
+            
+			for (var i=0 ; i < steps; i++ )
+			{
+			    var t = i/(steps-1);
+			    var p = this.bezier_(a, b, c, d, t);
+			    console.log(p);
+				path.push({ x: p[0],
+							y: p[1],
+							rotate: rotation + rotStep * i,
+							callback: i+1 === steps ? settings.callback : null
+						});
+			}
+			
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
+
+			rotation = ( canRotate ? settings.rotate : rotation );
+			setPos( dx, dy );
+			
+            // increase canvas size; should be bounding box of bezier, but is not @TODO fixit
+            updateCanvas( ax, ay );
+            updateCanvas( bx, by );
+            updateCanvas( cx, cy );
+            updateCanvas( dx, cy );
+            var a = [bx, by, cx, cy, dx, dy];
+			canvasPath.push({ method: "bezierCurveTo", args:a, isBezier:true }); // horrible!
+			
+			return this;
+        };
+        
 		this.getPath = function() {
 			return path;
 		};
@@ -319,25 +380,24 @@
 		/* Appends offsets to all x and y coordinates before returning the canvas path */
 		this.getCanvasPath = function() {
 			var i = 0;
+            var floor = settings.floorCoordinates ? Math.floor : function(x) {return x;};
+            
 			for( ; i < canvasPath.length; i++ ) {
-				canvasPath[ i ].args[ 0 ] -= this.getPathOffsetX();
-				canvasPath[ i ].args[ 1 ] -= this.getPathOffsetY();
+                canvasPath[ i ].args[ 0 ] = floor(canvasPath[ i ].args[ 0 ] - this.getPathOffsetX());
+                canvasPath[ i ].args[ 1 ] = floor(canvasPath[ i ].args[ 1 ] - this.getPathOffsetY());
 				if(canvasPath[ i ].hasOwnProperty("endX"))
-				    {
-				        canvasPath[ i ].endX -= this.getPathOffsetX();
-				        canvasPath[ i ].endY -= this.getPathOffsetY();
-                       if(settings.floorCoordinates)
-                       {
-                            canvasPath[ i ].endX = Math.floor(canvasPath[ i ].endX);
-                            canvasPath[ i ].endY = Math.floor(canvasPath[ i ].endY);
-                       }
-				    }
-				    
-               if(settings.floorCoordinates)
-               {
-                    canvasPath[ i ].args[ 0 ] = Math.floor(canvasPath[ i ].args[ 0 ]);
-                    canvasPath[ i ].args[ 1 ] = Math.floor(canvasPath[ i ].args[ 1 ]);
-               }
+                {
+                    canvasPath[ i ].endX = floor(canvasPath[ i ].endX - this.getPathOffsetX());
+                    canvasPath[ i ].endY = floor(canvasPath[ i ].endY - this.getPathOffsetY());
+                }
+                
+				if(canvasPath[ i ].hasOwnProperty("isBezier")) // horrible!
+				{				    
+				    canvasPath[ i ].args[ 2 ] = floor(canvasPath[ i ].args[ 2 ] - this.getPathOffsetX());
+				    canvasPath[ i ].args[ 3 ] = floor(canvasPath[ i ].args[ 3 ] - this.getPathOffsetY());
+				    canvasPath[ i ].args[ 4 ] = floor(canvasPath[ i ].args[ 4 ] - this.getPathOffsetX());
+				    canvasPath[ i ].args[ 5 ] = floor(canvasPath[ i ].args[ 5 ] - this.getPathOffsetY());
+				}
 			}
 			return canvasPath;
 		};
@@ -507,6 +567,11 @@
 	            
 	        case "arc": 
 	            svg = "A "+path.args[2]+","+path.args[2]+" 0 0,"+(!path.args[5]?"1":"0")+" "+path.endX+","+path.endY+" "; 
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg; break;
+	        
+	        case "bezierCurveTo": 
+	            svg = "C "+path.args[0]+" "+path.args[1]+" "+path.args[2]+" "+path.args[3]+" "+path.args[4]+" "+path.args[5]+" "; 
 	            if(settings.logSvg) console.log(svg); 
 	            svgpath+=svg; break;
 	    }

@@ -52,7 +52,7 @@
 			/* Initializes the plugin */
 			init: function( options ) {
 				if ( this.length > 1 || isInitialized ) $.error( "jQuery.scrollPath can only be initialized on *one* element *once*" );
-				
+
 				$.extend( settings, options );
 				isInitialized = true;
 				element = this;
@@ -100,7 +100,7 @@
 				return this;
 			}
 		};
-	
+
 	/* The Path object serves as a context to "draw" the scroll path
 		on before initializing the plugin */
 	function Path( scrollS, rotateS ) {
@@ -131,7 +131,7 @@
 				steps = Math.round( rotDistance / rotationSpeed ) * STEP_SIZE,
 				rotStep = ( radians - rotation ) / steps,
 				i = 1;
-			
+
 			if ( !HAS_TRANSFORM_SUPPORT ) {
 				if ( settings.name || settings.callback ) {
 					// In case there was a name or callback set to this path, we add an extra step with those
@@ -143,7 +143,7 @@
 				}
 				return this;
 			}
-			
+
 			for( ; i <= steps; i++ ) {
 				path.push({ x: xPos,
 							y: yPos,
@@ -233,7 +233,7 @@
 			if ( xPos !== startX || yPos !== startY ) {
 				this.lineTo( startX, startY );
 			}
-			
+
 			for ( ; i <= steps; i++ ) {
 				path.push({ x: centerX + radius * Math.cos( startAngle + radStep*i ),
 							y: centerY + radius * Math.sin( startAngle + radStep*i ),
@@ -333,7 +333,7 @@
 							e.preventDefault();
 							return false;
 						});
-		
+
 		scrollHandle = $( "<div>" ).
 							addClass( "sp-scroll-handle" ).
 							on({
@@ -354,7 +354,7 @@
 		});
 
 		$( "body" ).prepend( scrollBar.append( scrollHandle ) );
-		
+
 	}
 
 	/* Initializes the path canvas */
@@ -369,18 +369,18 @@
 				top: pathObject.getPathOffsetY(),
 				"pointer-events": "none"
 			};
-		
+
 		applyPrefix( style, "user-select", "none" );
 		applyPrefix( style, "user-drag", "none" );
-		
+
 		canvas = $( "<canvas>" ).
 					addClass( "sp-canvas" ).
 					css( style ).
 					prependTo( element );
-		
+
 		canvas[ 0 ].width = pathObject.getPathWidth();
 		canvas[ 0 ].height = pathObject.getPathHeight();
-		
+
 		drawCanvasPath( canvas[ 0 ].getContext( "2d" ), pathObject.getCanvasPath() );
 	}
 
@@ -525,7 +525,7 @@
 		var centeredX = node.x - $( window ).width() / 2,
 			centeredY = node.y - $( window ).height() / 2,
 			style = {};
-		
+
 		// Only use transforms when page is rotated
 		if ( normalizeAngle(node.rotate) === 0 ) {
 			style.left = -centeredX;
@@ -595,7 +595,7 @@
 			nEnd = normalizeAngle( end ),
 			diff = Math.abs( nStart - nEnd ),
 			invDiff = Math.PI * 2 - diff;
-		
+
 		if ( ( ccw && nStart < nEnd ) ||
 			( !ccw && nStart > nEnd ) ||
 			( nStart === nEnd && start !== end ) // Special case *
@@ -626,7 +626,7 @@
 		if( mod > snapValue / 2) return value + snapValue - mod;
 		return value - mod;
 	}
-	
+
 	/* Normalizes a given angle (sets it between 0 and 2 * Math.PI) */
 	function normalizeAngle( angle ) {
 		while( angle < 0 ) {

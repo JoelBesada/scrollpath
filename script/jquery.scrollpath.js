@@ -45,7 +45,13 @@
 		settings = {
 			wrapAround: false,
 			drawPath: false,
-			scrollBar: true
+			scrollBar: true, 
+      shadowBlur: 15,
+      shadowColor: "black",
+      strokeStyle: "white",
+      lineWidth: 10,
+      lineCap: "round",
+      lineJoin: "round"
 		},
 
 		methods = {
@@ -380,20 +386,23 @@
 		
 		canvas[ 0 ].width = pathObject.getPathWidth();
 		canvas[ 0 ].height = pathObject.getPathHeight();
+    
+    context = canvas[ 0 ].getContext( "2d" );
+    
+    
+		context.shadowBlur = settings.shadowBlur;
+		context.shadowColor = settings.shadowColor;
+		context.strokeStyle = settings.strokeStyle;
+		context.lineJoin = settings.lineJoin;
+		context.lineCap = settings.lineCap;
+		context.lineWidth = settings.lineWidth;
 		
-		drawCanvasPath( canvas[ 0 ].getContext( "2d" ), pathObject.getCanvasPath() );
+		drawCanvasPath( context, pathObject.getCanvasPath());
 	}
 
 	/* Sets the canvas path styles and draws the path */
 	function drawCanvasPath( context, path ) {
 		var i = 0;
-
-		context.shadowBlur = 15;
-		context.shadowColor = "black";
-		context.strokeStyle = "white";
-		context.lineJoin = "round";
-		context.lineCap = "round";
-		context.lineWidth = 10;
 
 		for( ; i < path.length; i++ ) {
 			context[ path[ i ].method ].apply( context, path[ i ].args );

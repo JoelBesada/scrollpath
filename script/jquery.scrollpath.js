@@ -45,7 +45,15 @@
 		settings = {
 			wrapAround: false,
 			drawPath: false,
-			scrollBar: true
+			scrollBar: true,
+			lineStyle: {
+				shadowBlur: 15,
+				shadowColor: "black",
+				strokeStyle: "white",
+				lineJoin: "round",
+				lineCap: "round",
+				lineWidth: 10
+			}
 		},
 
 		methods = {
@@ -53,7 +61,7 @@
 			init: function( options ) {
 				if ( this.length > 1 || isInitialized ) $.error( "jQuery.scrollPath can only be initialized on *one* element *once*" );
 				
-				$.extend( settings, options );
+				$.extend(true, settings, options);
 				isInitialized = true;
 				element = this;
 				pathList = pathObject.getPath();
@@ -388,12 +396,7 @@
 	function drawCanvasPath( context, path ) {
 		var i = 0;
 
-		context.shadowBlur = 15;
-		context.shadowColor = "black";
-		context.strokeStyle = "white";
-		context.lineJoin = "round";
-		context.lineCap = "round";
-		context.lineWidth = 10;
+		$.extend(true, context, settings.lineStyle);
 
 		for( ; i < path.length; i++ ) {
 			context[ path[ i ].method ].apply( context, path[ i ].args );

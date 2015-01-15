@@ -28,6 +28,7 @@
 		isInitialized = false,
 		isDragging = false,
 		isAnimating = false,
+		hasTransform3d = false,
 		step,
 		pathObject,
 		pathList,
@@ -52,9 +53,10 @@
 			/* Initializes the plugin */
 			init: function( options ) {
 				if ( this.length > 1 || isInitialized ) $.error( "jQuery.scrollPath can only be initialized on *one* element *once*" );
-				
+
 				$.extend( settings, options );
 				isInitialized = true;
+				hasTransform3d = has3d();
 				element = this;
 				pathList = pathObject.getPath();
 				initCanvas();
@@ -100,7 +102,7 @@
 				return this;
 			}
 		};
-	
+
 	/* The Path object serves as a context to "draw" the scroll path
 		on before initializing the plugin */
 	function Path( scrollS, rotateS ) {
@@ -131,7 +133,7 @@
 				steps = Math.round( rotDistance / rotationSpeed ) * STEP_SIZE,
 				rotStep = ( radians - rotation ) / steps,
 				i = 1;
-			
+
 			if ( !HAS_TRANSFORM_SUPPORT ) {
 				if ( settings.name || settings.callback ) {
 					// In case there was a name or callback set to this path, we add an extra step with those
@@ -143,7 +145,7 @@
 				}
 				return this;
 			}
-			
+
 			for( ; i <= steps; i++ ) {
 				path.push({ x: xPos,
 							y: yPos,
@@ -233,7 +235,7 @@
 			if ( xPos !== startX || yPos !== startY ) {
 				this.lineTo( startX, startY );
 			}
-			
+
 			for ( ; i <= steps; i++ ) {
 				path.push({ x: centerX + radius * Math.cos( startAngle + radStep*i ),
 							y: centerY + radius * Math.sin( startAngle + radStep*i ),
@@ -333,7 +335,7 @@
 							e.preventDefault();
 							return false;
 						});
-		
+
 		scrollHandle = $( "<div>" ).
 							addClass( "sp-scroll-handle" ).
 							on({
@@ -354,7 +356,7 @@
 		});
 
 		$( "body" ).prepend( scrollBar.append( scrollHandle ) );
-		
+
 	}
 
 	/* Initializes the path canvas */
@@ -369,18 +371,18 @@
 				top: pathObject.getPathOffsetY(),
 				"pointer-events": "none"
 			};
-		
+
 		applyPrefix( style, "user-select", "none" );
 		applyPrefix( style, "user-drag", "none" );
-		
+
 		canvas = $( "<canvas>" ).
 					addClass( "sp-canvas" ).
 					css( style ).
 					prependTo( element );
-		
+
 		canvas[ 0 ].width = pathObject.getPathWidth();
 		canvas[ 0 ].height = pathObject.getPathHeight();
-		
+
 		drawCanvasPath( canvas[ 0 ].getContext( "2d" ), pathObject.getCanvasPath() );
 	}
 
@@ -524,21 +526,65 @@
 	function makeCSS( node ) {
 		var centeredX = node.x - $( window ).width() / 2,
 			centeredY = node.y - $( window ).height() / 2,
-			style = {};
-		
-		// Only use transforms when page is rotated
-		if ( normalizeAngle(node.rotate) === 0 ) {
-			style.left = -centeredX;
-			style.top = -centeredY;
-			applyPrefix( style, "transform-origin", "" );
-			applyPrefix( style, "transform", "" );
+			style = {},
+			transform;
+
+		// Always use 3d transforms
+		// Unless the browser can't support it
+		if (hasTransform3d) {
+			transform = "translate3d(" + -centeredX + "px, " + -centeredY + "px, 0px)";
 		} else {
-			style.left = style.top = "";
-			applyPrefix( style, "transform-origin",  node.x + "px " + node.y + "px" );
-			applyPrefix( style, "transform", "translate(" + -centeredX + "px, " + -centeredY + "px) rotate(" + node.rotate + "rad)" );
+			// Normal movement
+			transform = "translate(" + -centeredX + "px, " + -centeredY + "px)";
 		}
 
+		if ( normalizeAngle(node.rotate) !== 0 ) {
+			if (hasTransform3d) {
+				transform += " rotate3d(0, 0, 1, " + node.rotate + "rad)";
+			} else {
+				transform += " rotate(" + node.rotate + "rad)";
+			}
+
+			applyPrefix( style, "transform-origin",  node.x + "px " + node.y + "px" );
+		} else {
+			applyPrefix( style, "transform-origin",  "" );
+		}
+
+
+		// Add the transform style
+		applyPrefix( style, "transform", transform );
+
 		return style;
+	}
+
+	function has3d() {
+		if (!window.getComputedStyle) {
+			return false;
+		}
+
+		var el = document.createElement('p'),
+		has3d,
+		transforms = {
+			'webkitTransform':'-webkit-transform',
+			'OTransform':'-o-transform',
+			'msTransform':'-ms-transform',
+			'MozTransform':'-moz-transform',
+			'transform':'transform'
+		};
+
+		// Add it to the body to get the computed style.
+		document.body.insertBefore(el, null);
+
+		for (var t in transforms) {
+			if (el.style[t] !== undefined) {
+				el.style[t] = "translate3d(1px,1px,1px)";
+				has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
+			}
+		}
+
+		document.body.removeChild(el);
+
+		return (has3d !== undefined && has3d.length > 0 && has3d !== "none");
 	}
 
 	/* Determine the vendor prefix of the visitor's browser,
@@ -595,7 +641,7 @@
 			nEnd = normalizeAngle( end ),
 			diff = Math.abs( nStart - nEnd ),
 			invDiff = Math.PI * 2 - diff;
-		
+
 		if ( ( ccw && nStart < nEnd ) ||
 			( !ccw && nStart > nEnd ) ||
 			( nStart === nEnd && start !== end ) // Special case *
@@ -626,7 +672,7 @@
 		if( mod > snapValue / 2) return value + snapValue - mod;
 		return value - mod;
 	}
-	
+
 	/* Normalizes a given angle (sets it between 0 and 2 * Math.PI) */
 	function normalizeAngle( angle ) {
 		while( angle < 0 ) {

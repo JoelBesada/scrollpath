@@ -29,6 +29,7 @@
 		isDragging = false,
 		isAnimating = false,
 		hasTransform3d = false,
+		hasTransform2d = false,
 		step,
 		pathObject,
 		pathList,
@@ -57,6 +58,7 @@
 				$.extend( settings, options );
 				isInitialized = true;
 				hasTransform3d = has3d();
+				hasTransform2d = has2d();
 				element = this;
 				pathList = pathObject.getPath();
 				initCanvas();
@@ -533,19 +535,23 @@
 		// Unless the browser can't support it
 		if (hasTransform3d) {
 			transform = "translate3d(" + -centeredX + "px, " + -centeredY + "px, 0px)";
-		} else {
+		} else if (hasTransform2d) {
 			// Normal movement
 			transform = "translate(" + -centeredX + "px, " + -centeredY + "px)";
+		} else {
+			style.left = -centeredX;
+			style.top = -centeredY;
 		}
 
 		if ( normalizeAngle(node.rotate) !== 0 ) {
 			if (hasTransform3d) {
 				transform += " rotate3d(0, 0, 1, " + node.rotate + "rad)";
-			} else {
+			} else if (hasTransform2d) {
 				transform += " rotate(" + node.rotate + "rad)";
 			}
 
-			applyPrefix( style, "transform-origin",  node.x + "px " + node.y + "px" );
+			if (hasTransform2d || hasTransform3d)
+				applyPrefix( style, "transform-origin",  node.x + "px " + node.y + "px" );
 		} else {
 			applyPrefix( style, "transform-origin",  "" );
 		}
@@ -578,6 +584,36 @@
 		for (var t in transforms) {
 			if (el.style[t] !== undefined) {
 				el.style[t] = "translate3d(1px,1px,1px)";
+				has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
+			}
+		}
+
+		document.body.removeChild(el);
+
+		return (has3d !== undefined && has3d.length > 0 && has3d !== "none");
+	}
+
+	function has2d() {
+		if (!window.getComputedStyle) {
+			return false;
+		}
+
+		var el = document.createElement('p'),
+		has3d,
+		transforms = {
+			'webkitTransform':'-webkit-transform',
+			'OTransform':'-o-transform',
+			'msTransform':'-ms-transform',
+			'MozTransform':'-moz-transform',
+			'transform':'transform'
+		};
+
+		// Add it to the body to get the computed style.
+		document.body.insertBefore(el, null);
+
+		for (var t in transforms) {
+			if (el.style[t] !== undefined) {
+				el.style[t] = "translate(1px,1px)";
 				has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
 			}
 		}

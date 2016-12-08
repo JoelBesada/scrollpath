@@ -43,9 +43,13 @@
 
 		// Default plugin settings
 		settings = {
-			wrapAround: false,
+			wrapAround: false, // also SVG "Z" closepath
 			drawPath: false,
-			scrollBar: true
+			scrollBar: true,
+			logSvg: false,                 // output SVG path to console to draw a PNG later (copy from console to *.svg file!) 
+			autoJoinArcWithLineTo: true,   // fill gaps automatically with inserted lineTo
+			useDegrees: false,             // arc uses angles in degrees
+			floorCoordinates:false         // turn off antialias on canvas
 		},
 
 		methods = {
@@ -78,9 +82,13 @@
 				return this;
 			},
 
-			getPath: function( options ) {
+			getPath: function( options, pluginSettings ) {
 				$.extend( speeds, options );
-				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed ));
+				
+				if(pluginSettings === undefined)
+				    pluginSettings = settings;
+				
+				return pathObject || ( pathObject = new Path( speeds.scrollSpeed, speeds.rotationSpeed, pluginSettings ));
 			},
 
 			scrollTo: function( name, duration, easing, callback ) {
@@ -103,7 +111,7 @@
 	
 	/* The Path object serves as a context to "draw" the scroll path
 		on before initializing the plugin */
-	function Path( scrollS, rotateS ) {
+	function Path( scrollS, rotateS, pluginSettings ) {
 		var PADDING = 40,
 			scrollSpeed = scrollS,
 			rotationSpeed = rotateS,
@@ -123,6 +131,10 @@
 				callback: null,
 				name: null
 			};
+			
+	    this.pluginSettings = pluginSettings;
+			
+		this.deg2rad = function(d) { return 2*Math.PI*(d-90)/360; };
 
 		/* Rotates the screen while staying in place */
 		this.rotate = function( radians, options ) {
@@ -164,6 +176,12 @@
 				steps = path.length ? STEP_SIZE : 1;
 				i = 0;
 
+			this.lineEndPointX = x;
+			this.lineEndPointY = y;
+			
+			if(this.pluginSettings.logSvg)
+			    console.log("lineEndPointX (moveto) = ",x,",",y);
+			
 			for( ; i < steps; i++ ) {
 				path.push({ x: x,
 							y: y,
@@ -194,6 +212,13 @@
 				rotStep = ( canRotate ? ( settings.rotate - rotation ) / steps : 0 ),
 				i = 1;
 
+			// save endpoints for easier relative calculation
+			this.lineEndPointX = x;
+			this.lineEndPointY = y;
+			
+			if(this.pluginSettings.logSvg)
+			    console.log("lineEndPointX = ",x,",",y);
+			
 			for ( ; i <= steps; i++ ) {
 				path.push({ x: xPos + xStep * i,
 							y: yPos + yStep * i,
@@ -212,10 +237,29 @@
 			return this;
 		};
 
+		/* Simplifies drawing an arc from a given start point, no need to calculate center first. */
+		this.arcFrom = function( startX, startY, radius, startAngle, endAngle, counterclockwise, options ) {
+		    var rad = this.pluginSettings.useDegrees ? this.deg2rad(startAngle) : startAngle;
+		    var centerX = startX - Math.cos( rad ) * radius;
+		    var centerY = startY - Math.sin( rad ) * radius;
+		    this.arc(centerX, centerY, radius, startAngle, endAngle, counterclockwise, options);
+			return this;
+		};
+		
 		/* Draws an arced path with a given circle center, radius, start and end angle. */
 		this.arc = function( centerX, centerY, radius, startAngle, endAngle, counterclockwise, options ) {
-			var settings = $.extend( {}, defaults, options ),
-				startX = centerX + Math.cos( startAngle ) * radius,
+					    
+		    var settings = $.extend( {}, defaults, options );
+		    
+		    if(this.pluginSettings.useDegrees) {
+		        startAngle = this.deg2rad(startAngle);
+		        endAngle = this.deg2rad(endAngle);
+		        
+		        if(settings.rotate)
+		            settings.rotate = this.deg2rad(settings.rotate);
+		    }
+		    
+			var startX = centerX + Math.cos( startAngle ) * radius,
 				startY = centerY + Math.sin( startAngle ) * radius,
 				endX = centerX + Math.cos( endAngle ) * radius,
 				endY = centerY + Math.sin( endAngle ) * radius,
@@ -227,11 +271,22 @@
 				rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 ),
 				i = 1;
 
+			// save endpoints for easier relative calculation
+			this.arcEndPointX = endX;
+			this.arcEndPointY = endY;
+
+			if(this.pluginSettings.logSvg)
+			    console.log("arcEndPoint = ",endX,",",endY);
+			
 			// If the arc starting point isn't the same as the end point of the preceding path,
 			// prepend a line to the starting point. This is the default behavior when drawing on
 			// a canvas.
-			if ( xPos !== startX || yPos !== startY ) {
-				this.lineTo( startX, startY );
+			if(this.pluginSettings.autoJoinArcWithLineTo)
+            {
+                if ( xPos !== startX || yPos !== startY )
+                {
+                    this.lineTo( startX, startY );
+                }
 			}
 			
 			for ( ; i <= steps; i++ ) {
@@ -248,11 +303,69 @@
 
 			updateCanvas( centerX + radius, centerY + radius );
 			updateCanvas( centerX - radius, centerY - radius );
-			canvasPath.push({ method: "arc", args: arguments });
+			canvasPath.push({ method: "arc", args: arguments, endX:endX, endY:endY });
 
 			return this;
 		};
+		
+        this.linearInterpolation_ = function(a, b, t)
+        {
+            return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t];
+        };
 
+        // evaluate a point on a bezier-curve. t goes from 0 to 1.0
+        this.bezier_ = function(a, b, c, d, t)
+        {
+            var ab = this.linearInterpolation_(a,b,t);           // point between a and b (green)
+            var bc = this.linearInterpolation_(b,c,t);           // point between b and c (green)
+            var cd = this.linearInterpolation_(c,d,t);           // point between c and d (green)
+            var abbc = this.linearInterpolation_(ab,bc,t);       // point between ab and bc (blue)
+            var bccd = this.linearInterpolation_(bc,cd,t);       // point between bc and cd (blue)
+            return this.linearInterpolation_(abbc,bccd,t);   // point on the bezier-curve (black)
+        };
+        
+        this.bezierCurve = function(ax, ay, bx, by, cx, cy, dx, dy, options)
+        {
+		    var settings = $.extend( {}, defaults, options ); // overloads plugin's settings variable!
+		    
+		    var relX = dx - ax,
+				relY = dy - ay,
+				canRotate = settings.rotate !== null && HAS_TRANSFORM_SUPPORT,
+				distance = hypotenuse( relX, relY )*1.3; // bad approximation @TODO fixit, but how?
+
+            var steps = Math.round( distance/scrollSpeed ) * STEP_SIZE;
+            var rotStep = ( canRotate ? (settings.rotate - rotation) / steps : 0 );
+            
+            var a = [ax, ay];
+            var b = [bx, by];
+            var c = [cx, cy];
+            var d = [dx, dy];
+            
+			for (var i=0 ; i < steps; i++ )
+			{
+			    var t = i/(steps-1);
+			    var p = this.bezier_(a, b, c, d, t);
+			    
+			    updateCanvas(p[0],p[1]); // increase canvas size to bounding box of bezier
+			    
+				path.push({ x: p[0],
+							y: p[1],
+							rotate: rotation + rotStep * i,
+							callback: i+1 === steps ? settings.callback : null
+						});
+			}
+			
+			if( settings.name ) nameMap[ settings.name ] = path.length - 1;
+
+			rotation = ( canRotate ? settings.rotate : rotation );
+			setPos( dx, dy );
+			
+            var a = [bx, by, cx, cy, dx, dy];
+			canvasPath.push({ method: "bezierCurveTo", args:a, isBezier:true }); // horrible!
+			
+			return this;
+        };
+        
 		this.getPath = function() {
 			return path;
 		};
@@ -264,9 +377,24 @@
 		/* Appends offsets to all x and y coordinates before returning the canvas path */
 		this.getCanvasPath = function() {
 			var i = 0;
+            var floor = settings.floorCoordinates ? Math.floor : function(x) {return x;};
+            
 			for( ; i < canvasPath.length; i++ ) {
-				canvasPath[ i ].args[ 0 ] -= this.getPathOffsetX();
-				canvasPath[ i ].args[ 1 ] -= this.getPathOffsetY();
+                canvasPath[ i ].args[ 0 ] = floor(canvasPath[ i ].args[ 0 ] - this.getPathOffsetX());
+                canvasPath[ i ].args[ 1 ] = floor(canvasPath[ i ].args[ 1 ] - this.getPathOffsetY());
+				if(canvasPath[ i ].hasOwnProperty("endX"))
+                {
+                    canvasPath[ i ].endX = floor(canvasPath[ i ].endX - this.getPathOffsetX());
+                    canvasPath[ i ].endY = floor(canvasPath[ i ].endY - this.getPathOffsetY());
+                }
+                
+				if(canvasPath[ i ].hasOwnProperty("isBezier")) // horrible!
+				{				    
+				    canvasPath[ i ].args[ 2 ] = floor(canvasPath[ i ].args[ 2 ] - this.getPathOffsetX());
+				    canvasPath[ i ].args[ 3 ] = floor(canvasPath[ i ].args[ 3 ] - this.getPathOffsetY());
+				    canvasPath[ i ].args[ 4 ] = floor(canvasPath[ i ].args[ 4 ] - this.getPathOffsetX());
+				    canvasPath[ i ].args[ 5 ] = floor(canvasPath[ i ].args[ 5 ] - this.getPathOffsetY());
+				}
 			}
 			return canvasPath;
 		};
@@ -387,7 +515,6 @@
 	/* Sets the canvas path styles and draws the path */
 	function drawCanvasPath( context, path ) {
 		var i = 0;
-
 		context.shadowBlur = 15;
 		context.shadowColor = "black";
 		context.strokeStyle = "white";
@@ -397,11 +524,56 @@
 
 		for( ; i < path.length; i++ ) {
 			context[ path[ i ].method ].apply( context, path[ i ].args );
+			logSvgPath(path[ i ]);
 		}
 
+		if(settings.logSvg)
+		{
+		    var z = settings.wrapAround ? "Z" : "";
+		        
+		    console.log(svgPrefix+svgpath+z+svgPostfix);
+		}
+		
 		context.stroke();
 	}
 
+	var svgpath = "";
+	
+	var svgPrefix = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+	svgPrefix += '<svg xmlns="http://www.w3.org/2000/svg" viewBox = "0 0 1100 6250" version = "1.1"><g stroke = "black" stroke-width = "3" fill = "none">';
+	svgPrefix += '<path d="';
+	
+	var svgPostfix = '" /></g></svg>';
+	
+	
+	function logSvgPath(path)
+	{
+	    switch(path.method)
+	    {
+	        case "moveTo": 
+	            svg = "M " + path.args[0] + "," + path.args[1] + " ";
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg;
+	            break;
+	            
+	        case "lineTo": 
+	            svg = "L " + path.args[0] + "," + path.args[1] + " ";
+	            if(settings.logSvg) console.log(svg);
+	            svgpath+=svg;
+	            break;
+	            
+	        case "arc": 
+	            svg = "A "+path.args[2]+","+path.args[2]+" 0 0,"+(!path.args[5]?"1":"0")+" "+path.endX+","+path.endY+" "; 
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg; break;
+	        
+	        case "bezierCurveTo": 
+	            svg = "C "+path.args[0]+" "+path.args[1]+" "+path.args[2]+" "+path.args[3]+" "+path.args[4]+" "+path.args[5]+" "; 
+	            if(settings.logSvg) console.log(svg); 
+	            svgpath+=svg; break;
+	    }
+	}
+	
 	/* Handles mousewheel scrolling */
 	function scrollHandler( e ) {
 		var scrollDelta = e.originalEvent.wheelDelta || -e.originalEvent.detail,
